@@ -46,7 +46,7 @@ typedef enum
  *  Global option settings. Documented in options.c. 
  *  Do not modify any of these from outside that file.
  */
-extern const char   *locker, *nowLocker, *notifier, *killer;
+extern const char   *locker, *nowLocker, *notifier, *killer, *id;
 extern time_t       lockTime, killTime, notifyMargin,
                     cornerDelay, cornerRedelay;
 extern int          bellPercent;

@@ -209,14 +209,14 @@ getAtoms (Display* d)
   char* mes; /* message property name   */
   char* ptr; /* iterator                */
 
-  sem = newArray (char, strlen (progName) + strlen (SEM_PID) + 1);
-  (void) sprintf (sem, "%s%s", progName, SEM_PID);
+  sem = newArray (char, strlen (progName) + strlen (SEM_PID) + strlen(id) + 1);
+  (void) sprintf (sem, "%s%s%s", progName, SEM_PID, id);
   for (ptr = sem; *ptr; ++ptr) *ptr = (char) toupper (*ptr);
   semaphore = XInternAtom (d, sem, False);
   free (sem);
 
-  mes = newArray (char, strlen (progName) + strlen (MESSAGE) + 1);
-  (void) sprintf (mes, "%s%s", progName, MESSAGE);
+  mes = newArray (char, strlen (progName) + strlen (MESSAGE) + strlen(id) + 1);
+  (void) sprintf (mes, "%s%s%s", progName, MESSAGE, id);
   for (ptr = mes; *ptr; ++ptr) *ptr = (char) toupper (*ptr);
   messageAtom = XInternAtom (d, mes, False);
   free (mes);

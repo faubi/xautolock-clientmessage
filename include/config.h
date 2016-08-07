@@ -105,6 +105,8 @@
 #define NOTIFIER          ""          /* default notifier command          */
 #define KILLER            ""          /* default killer command            */
 
+#define ID                ""          /* unique id per xautolock process   */
+
 #define DUMMY_RES_CLASS   "_xAx_"     /* some X versions don't like a 0
                                          class name, and implementing real
 				         classes isn't worth it            */

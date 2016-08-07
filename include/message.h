@@ -22,6 +22,8 @@
 #define __message_h
 
 #include "config.h"
+#include <sys/socket.h>
+#include <sys/select.h>
 
 extern void checkConnectionAndSendMessage (Display* d);
 extern void lookForMessages (Display* d);

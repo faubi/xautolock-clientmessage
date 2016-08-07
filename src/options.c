@@ -52,6 +52,8 @@ message      messageToSend = msg_none;   /* message to send to an
 Bool         detectSleep = False;        /* whether to reset the timers
 					    after a (laptop) sleep, 
 					    i.e. after a big time jump  */
+const char*  id = ID;                    /* used to distinguish between
+                                            different processes         */
 
 #ifdef VMS
 struct dsc$descriptor lockerDescr;       /* used to fire up the locker  */
@@ -175,6 +177,14 @@ cornersAction (Display* d, const char* arg)
     }
   }
 
+  return True;
+}
+
+static Bool
+idAction (Display* d, const char* arg)
+{
+  id = arg;
+    printf("id set to \"%s\"", arg);
   return True;
 }
 
@@ -509,6 +519,8 @@ static struct
     notifyAction       , notifyChecker             },
   {"bell"              , XrmoptionSepArg, (caddr_t) 0 ,
     bellAction         , bellChecker               },
+  {"id"                , XrmoptionSepArg, (caddr_t) "",
+    idAction           , (optChecker) 0            },
   {"secure"            , XrmoptionNoArg , (caddr_t) "",
     secureAction       , (optChecker) 0            },
   {"enable"            , XrmoptionNoArg , (caddr_t) "",
@@ -562,7 +574,7 @@ usage (int exitCode)
   error1 ("%s[-killtime mins][-killer killer]\n", blanks);
   error1 ("%s[-notify margin][-notifier notifier][-bell percent]\n", blanks);
   error1 ("%s[-corners xxxx][-cornerdelay secs]\n", blanks);
-  error1 ("%s[-cornerredelay secs][-cornersize pixels]\n", blanks);
+  error1 ("%s[-cornerredelay secs][-cornersize pixels][-id id]\n", blanks);
   error1 ("%s[-nocloseout][-nocloseerr][-noclose]\n", blanks);
   error1 ("%s[-enable][-disable][-toggle][-exit][-secure]\n", blanks);
   error1 ("%s[-locknow][-unlocknow][-nowlocker locker]\n", blanks);
@@ -587,6 +599,7 @@ usage (int exitCode)
   error0 (" -cornerdelay secs   : time to lock screen in a `+' corner.\n");
   error0 (" -cornerredelay secs : time to relock screen in a `+' corner.\n");
   error0 (" -cornersize pixels  : size of corner areas.\n");
+  error0 (" -id id              : unique id to specify instance.\n");
   error0 (" -nocloseout         : do not close stdout.\n");
   error0 (" -nocloseerr         : do not close stderr.\n");
   error0 (" -noclose            : close neither stdout nor stderr.\n");

@@ -118,6 +118,10 @@ users of xnlock will need to use \fB\-nocloseout\fR, in order to make xnlock's
 witty sayings show up. These options can also be used for debugging cases in
 which \fIlocker\fR invocation is not successful.
 
+To run multiple instance of xautolock on the same display, the \fB\-id\fR
+option may be used to give each instance a unique id or to specify the id of
+the target xautolock instance.
+
 Xautolock is capable of managing multi-headed displays.
 
 .SH OPTIONS
@@ -202,6 +206,12 @@ saver. Note that the default screen saver is not disabled, only reset.
 Also note that using \fB\-resetsaver\fR will inferfere with the DPMS
 monitors, as the power down time out will also be also reset. The
 default is not to reset the screen saver.
+\fB\-id\fR
+Specifies a unique id to give this instance of xautolock. If invoking an
+option such as \fB\-locknow\fR or \fB\-disable\fR which modifies another
+running xautolock process, the specified id is instead used to determine which
+process. The id may be any ASCII string, and is case-insensitive. If you need
+only one instance of xautolock, this can be safely left unspecified.
 
 See the \fIxset\fR man page for more information about managing the 
 X screen saver.
