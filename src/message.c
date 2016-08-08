@@ -37,8 +37,8 @@ static Atom messageResponse; /* indicates a response from the
 /*
 *  Message handlers.
 */
-static response
-disableByMessage (Display* d, Window root)
+static void
+disableByMessage (Display* d, Window root, fullResponse* response)
 {
   /*
   *  The order in which things are done is rather important here.
@@ -48,25 +48,31 @@ disableByMessage (Display* d, Window root)
     setLockTrigger (lockTime);
     disableKillTrigger ();
     disabled = True;
-    return response_success;
+    response->type = response_success;
   }
-  return response_failure;
+  else
+  {
+    response->type = response_failure;
+  }
 }
 
-static response
-enableByMessage (Display* d, Window root)
+static void
+enableByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure) 
   {
     resetTriggers ();
     disabled = False;
-    return response_success;
+    response->type = response_success;
   }
-  return response_failure;
+  else
+  {
+    response->type = response_failure;
+  }
 }
 
-static response
-toggleByMessage (Display* d, Window root)
+static void
+toggleByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure)
   {
@@ -79,56 +85,78 @@ toggleByMessage (Display* d, Window root)
     {
       resetTriggers ();
     }
-    return response_success;
+    response->type = response_success;
   }
-  return response_failure;
+  else
+  {
+    response->type = response_failure;
+  }
 }
 
-static response
-exitByMessage (Display* d, Window root)
+static void
+exitByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure)
   {
     error0 ("Exiting. Bye bye...\n");
     exit (0);
-    return response_success;
+    response->type = response_success;
   }
-  return response_failure;
+  else
+  {
+    response->type = response_failure;
+  }
 }
 
-static response
-lockNowByMessage (Display* d, Window root)
+static void
+lockNowByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure && !disabled)
   {
     lockNow = True;
-    return response_success;
+    response->type = response_success;
   }
-  return response_failure;
+  else
+  {
+    response->type = response_failure;
+  }
 }
 
-static response
-unlockNowByMessage (Display* d, Window root)
+static void
+unlockNowByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure && !disabled)
   {
     unlockNow = True;
-    return response_success;
+    response->type = response_success;
   }
-  return response_failure;
+  else
+  {
+    response->type = response_failure;
+  }
 }
 
-static response
-restartByMessage (Display* d, Window root)
+static void
+restartByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure)
   {
     XDeleteProperty (d, root, semaphore);
     XFlush (d);
     execv (argArray[0], argArray);
-    return response_success;
+    response->type = response_success;
   }
-  return response_failure;
+  else
+  {
+    response->type = response_failure;
+  }
+}
+
+static void
+isDisabledMessage (Display* d, Window root, fullResponse* response)
+{
+  response->type = response_bool;
+  response->data[0] = disabled;
 }
 
 /*
@@ -181,10 +209,6 @@ eventListen(Display* d, double timeout, eventHandler callback)
         break;
       }
     }
-    else
-    {
-      printf("Socket timed out\n");
-    }
     gettimeofday(&now, NULL);
     timeLeft.tv_usec = until.tv_sec - now.tv_sec;
     timeLeft.tv_usec = until.tv_usec - now.tv_usec;
@@ -209,57 +233,63 @@ handleRequest(Display* d, XEvent* event)
 {  
   Window root;          /* as it says        */
   response response;    /* response type to send   */
-  XEvent responseEvent; /* event sent to requester */
+  XEvent responseEvent = { 0 }; /* event sent to requester */
   
   printf("Received event\n");
   
+
   if (event->type == ClientMessage
     && event->xclient.message_type == messageRequest) {
-    message request = event->xclient.data.b[0];
+    message request = event->xclient.data.l[0];
     root = RootWindowOfScreen (ScreenOfDisplay (d, 0));
     printf("Event is request %d\n", request);
+    fullResponse* responseBody = (fullResponse*) &responseEvent.xclient.data;
     switch (request)
     {
       case msg_disable:
-      response = disableByMessage (d, root);
+       disableByMessage (d, root, responseBody);
       break;
 
       case msg_enable:
-      response = enableByMessage (d, root);
+       enableByMessage (d, root, responseBody);
       break;
 
       case msg_toggle:
-      response = toggleByMessage (d, root);
+       toggleByMessage (d, root, responseBody);
       break;
 
       case msg_lockNow:
-      response = lockNowByMessage (d, root);
+       lockNowByMessage (d, root, responseBody);
       break;
 
       case msg_unlockNow:
-      response = unlockNowByMessage (d, root);
+       unlockNowByMessage (d, root, responseBody);
       break;
 
       case msg_restart:
-      response = restartByMessage (d, root);
+       restartByMessage (d, root, responseBody);
       break;
 
       case msg_exit:
-      response = exitByMessage (d, root);
+       exitByMessage (d, root, responseBody);
+      break;
+      
+      case msg_isDisabled:
+        isDisabledMessage (d, root, responseBody);
       break;
 
       default:
       /* unknown message, ignore silently */
-      response = response_none;
+       responseBody->type = response_none;
       break;
     }
-    if (response != response_none)
+    if (responseBody->type != response_none)
     {
+      printf("Sending response, type = %d, data[0] = %d\n", responseBody->type, responseBody->data[0]);
       responseEvent.type = ClientMessage;
       responseEvent.xclient.display = d;
       responseEvent.xclient.message_type = messageResponse;
-      responseEvent.xclient.format = 8;
-      responseEvent.xclient.data.b[0] = response;
+      responseEvent.xclient.format = 32;
       XSendEvent(d, event->xclient.window, False, 0, &responseEvent);
     }
   }
@@ -276,8 +306,9 @@ handleResponse(Display* d, XEvent* event)
   
   if (event->type == ClientMessage
     && event->xclient.message_type == messageResponse) {
-    response response = event->xclient.data.b[0];
-    switch(response)
+    fullResponse* response = (fullResponse*) &event->xclient.data;
+    printf("Received response, type = %d, data[0] = %d\n", response->type, response->data[0]);
+    switch(response->type)
     {
       case response_success:
         exit(EXIT_SUCCESS);
@@ -287,6 +318,18 @@ handleResponse(Display* d, XEvent* event)
         error0("The operation was denied by the target instance. "
           "It may be in secure mode.\n");
         exit(EXIT_FAILURE);
+      break;
+      
+      case response_bool:
+        if (response->data[0])
+        {
+          printf("true\n");
+        }
+        else
+        {
+          printf("false\n");
+        }
+        exit(EXIT_SUCCESS);
       break;
       
       default:
@@ -381,8 +424,8 @@ checkConnectionAndSendMessage (Display* d, Window w)
       request.xclient.display = d;
       request.xclient.window = w;
       request.xclient.message_type = messageRequest;
-      request.xclient.format = 8;
-      request.xclient.data.b[0] = messageToSend;
+      request.xclient.format = 32;
+      request.xclient.data.l[0] = messageToSend;
       XSendEvent(d, (Window) *contents, False, 0, &request);
       eventListen(d, 1, handleResponse);
       exit (EXIT_SUCCESS);

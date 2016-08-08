@@ -40,6 +40,7 @@ typedef enum
   msg_lockNow,   /* tell running xautolock to lock now   */
   msg_unlockNow, /* tell running xautolock to unlock now */
   msg_restart,   /* tell running xautolock to restart    */
+  msg_isDisabled, /* ask running xautolock for disabled status */
 } message;
 
 typedef enum
@@ -47,6 +48,7 @@ typedef enum
   response_none,      /* no response is sent           */
   response_success,   /* requested operation succeeded */
   response_failure,   /* requested operation failed    */
+  response_bool,      /* second element contains bool  */
 } response;
 
 /*

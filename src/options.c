@@ -228,6 +228,7 @@ MESSAGE_ACTION (exit     )
 MESSAGE_ACTION (lockNow  )
 MESSAGE_ACTION (unlockNow)
 MESSAGE_ACTION (restart  )
+MESSAGE_ACTION (isDisabled)
 
 #define BOOL_ACTION(name)                  \
 static Bool                                \
@@ -537,6 +538,8 @@ static struct
     unlockNowAction    , (optChecker) 0            },
   {"restart"           , XrmoptionNoArg , (caddr_t) "",
     restartAction      , (optChecker) 0            },
+  {"isdisabled"        , XrmoptionNoArg , (caddr_t) "",
+    isDisabledAction   , (optChecker) 0            },
   {"resetsaver"        , XrmoptionNoArg , (caddr_t) "",
     resetSaverAction   , (optChecker) 0            },
   {"noclose"           , XrmoptionNoArg , (caddr_t) "",

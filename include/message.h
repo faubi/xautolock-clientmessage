@@ -22,10 +22,16 @@
 #define __message_h
 
 #include "config.h"
+#include "options.h"
 #include <sys/socket.h>
 #include <sys/select.h>
 
 extern void checkConnectionAndSendMessage (Display* d, Window w);
 extern void lookForMessages (Display* d, double timeout);
+
+typedef struct {
+    response type;
+    long data[4];
+} fullResponse;
 
 #endif /* __message_h */
