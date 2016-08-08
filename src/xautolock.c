@@ -54,7 +54,7 @@ catchFalseAlarm (Display* d, XErrorEvent event)
 /*
  *  Window manager related stuff.
  */
-static void
+static Window
 wmSetup (Display* d)
 {
  /*
@@ -88,6 +88,8 @@ wmSetup (Display* d)
   (void) XFree (classInfo);
 
   (void) XMapWindow (d, ourWin);
+  
+  return ourWin;
 }
 
 /*
@@ -115,12 +117,14 @@ main (int argc, char* argv[])
   */
   initState (argc, argv);
   processOpts (d, argc, argv);
-  wmSetup (d);
-  checkConnectionAndSendMessage (d);
+  Window w = wmSetup (d);
+  printf("Got window %d\n", w);
+  (void) XSetErrorHandler ((XErrorHandler) catchFalseAlarm);
+  checkConnectionAndSendMessage (d, w);
   resetTriggers ();
 
-  if (!noCloseOut) (void) fclose (stdout);
-  if (!noCloseErr) (void) fclose (stderr);
+//   if (!noCloseOut) (void) fclose (stdout);
+//   if (!noCloseErr) (void) fclose (stderr);
 
 #ifdef HasXidle
   queryExtension (Xidle, useXidle)
@@ -132,7 +136,6 @@ main (int argc, char* argv[])
 
   if (!useXidle && !useMit) initDiy (d);
 
-  (void) XSetErrorHandler ((XErrorHandler) catchFalseAlarm);
   (void) XSync (d, 0);
 
   t0 = time (NULL);
@@ -143,7 +146,7 @@ main (int argc, char* argv[])
   */
   for (;;)
   {
-    lookForMessages (d);
+    lookForMessages (d, 1);
 
     if (useXidle || useMit)
     {
@@ -156,8 +159,6 @@ main (int argc, char* argv[])
 
     queryPointer (d);
     evaluateTriggers (d);
-
-    (void) sleep (1);
 
     if (detectSleep)
     {

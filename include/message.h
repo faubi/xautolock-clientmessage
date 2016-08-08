@@ -25,7 +25,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 
-extern void checkConnectionAndSendMessage (Display* d);
-extern void lookForMessages (Display* d);
+extern void checkConnectionAndSendMessage (Display* d, Window w);
+extern void lookForMessages (Display* d, double timeout);
 
 #endif /* __message_h */

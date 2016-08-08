@@ -42,6 +42,13 @@ typedef enum
   msg_restart,   /* tell running xautolock to restart    */
 } message;
 
+typedef enum
+{
+  response_none,      /* no response is sent           */
+  response_success,   /* requested operation succeeded */
+  response_failure,   /* requested operation failed    */
+} response;
+
 /*
  *  Global option settings. Documented in options.c. 
  *  Do not modify any of these from outside that file.

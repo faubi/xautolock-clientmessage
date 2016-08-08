@@ -35,6 +35,7 @@
 #include <signal.h>
 #include <ctype.h>
 #include <sys/types.h>
+#include <sys/select.h>
 
 #ifndef VMS
 #include <pwd.h>
