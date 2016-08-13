@@ -579,8 +579,8 @@ usage (int exitCode)
   error1 ("%s[-corners xxxx][-cornerdelay secs]\n", blanks);
   error1 ("%s[-cornerredelay secs][-cornersize pixels][-id id]\n", blanks);
   error1 ("%s[-nocloseout][-nocloseerr][-noclose]\n", blanks);
-  error1 ("%s[-enable][-disable][-toggle][-exit][-secure]\n", blanks);
-  error1 ("%s[-locknow][-unlocknow][-nowlocker locker]\n", blanks);
+  error1 ("%s[-enable][-disable][-toggle][-exit][-isdisabled]\n", blanks);
+  error1 ("%s[-locknow][-unlocknow][-nowlocker locker][-secure]\n", blanks);
   error1 ("%s[-restart][-resetsaver][-detectsleep]\n", blanks);
 
   error0 ("\n");
@@ -608,6 +608,7 @@ usage (int exitCode)
   error0 (" -noclose            : close neither stdout nor stderr.\n");
   error0 (" -enable             : enable a running xautolock.\n");
   error0 (" -disable            : disable a running xautolock.\n");
+  error0 (" -isdisabled         : check if a running xautolock is disabled.\n");
   error0 (" -toggle             : toggle a running xautolock.\n");
   error0 (" -locknow            : tell a running xautolock to lock.\n");
   error0 (" -unlocknow          : tell a running xautolock to unlock.\n");

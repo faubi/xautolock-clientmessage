@@ -21,9 +21,9 @@ This man page applies to xautolock version 2.2.
 [\fB\-secure\fR]
 [\fB\-resetsaver\fR]
 [\fB\-nocloseout\fR] [\fB\-nocloseerr\fR] [\fB\-noclose\fR]
-[\fB\-disable\fR] [\fB\-enable\fR] [\fB\-toggle\fR] [\fB\-exit\fR]
-[\fB\-locknow\fR] [\fB\-unlocknow\fR] [\fB\-nowlocker\fR \fIlocker\fR]
-[\fB\-restart\fR] [\fB\-detectsleep\fR]
+[\fB\-disable\fR] [\fB\-enable\fR] [\fB\-toggle\fR] [\fB-isdisabed\fR]
+[\fB\-exit\fR] [\fB\-locknow\fR] [\fB\-unlocknow\fR]
+[\fB\-nowlocker\fR \fIlocker\fR] [\fB\-restart\fR] [\fB\-detectsleep\fR]
 
 .SH DESCRIPTION 
 Xautolock monitors the user activity on an X Window display. If none is
@@ -255,6 +255,13 @@ it does not have \fB\-secure\fR switched on) between its disabled and
 enabled modes of operation. In any case, the current invocation of
 xautolock exits.
 .TP 
+\fB-isdisabled\fR
+Determines whether an already runninng xautolock process is currently
+disabled, outputting "true" if it's disabled and "false" if enabled. If
+the already running process is not found nothing will be printed and the
+exit code will be 1. In any case, the current invocation of xautolock
+exits.
+.TP
 \fB\-exit\fR
 Causes an already running xautolock process (if there is one, and
 it does not have \fB\-secure\fR switched on) to exit. In any case,
