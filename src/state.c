@@ -31,6 +31,8 @@ Bool        unlockNow   = False; /* whether to unlock immediately      */
 time_t      lockTrigger = 0;     /* time at which to invoke the locker */
 time_t      killTrigger = 0;     /* time at which to invoke the killer */
 pid_t       lockerPid   = 0;     /* process id of the current locker   */
+volatile sig_atomic_t exitNow     = 0; /* whether to exit immediately        */
+Bool        restartNow  = False; /* whether to restart immediately     */
 
 /*
  *  Please have a guess what this is for... :-)

@@ -32,6 +32,8 @@ extern Bool        unlockNow;
 extern time_t      lockTrigger;
 extern time_t      killTrigger;
 extern pid_t       lockerPid;
+extern volatile sig_atomic_t exitNow;
+extern Bool        restartNow;
 
 #define setLockTrigger(delta) (lockTrigger = time ((time_t*) 0) + (delta))
 #define setKillTrigger(delta) (killTrigger = time ((time_t*) 0) + (delta))

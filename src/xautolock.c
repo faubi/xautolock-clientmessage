@@ -92,16 +92,22 @@ wmSetup (Display* d)
   return ourWin;
 }
 
+void
+signalHandler (int sig)
+{
+  exitNow = 1;
+}
+
 /*
  *  Combat control.
  */
 int
 main (int argc, char* argv[])
 {
-  Display* d;
-  time_t   t0, t1;
-  Bool     useMit = False;
-  Bool     useXidle = False;
+  Display*     d;
+  time_t       t0, t1;
+  Bool         useMit = False;
+  Bool         useXidle = False;
 
  /*
   *  Find out whether there actually is a server on the other side...
@@ -123,8 +129,8 @@ main (int argc, char* argv[])
   checkConnectionAndSendMessage (d, w);
   resetTriggers ();
 
-//   if (!noCloseOut) (void) fclose (stdout);
-//   if (!noCloseErr) (void) fclose (stderr);
+  if (!noCloseOut) (void) fclose (stdout);
+  if (!noCloseErr) (void) fclose (stderr);
 
 #ifdef HasXidle
   queryExtension (Xidle, useXidle)
@@ -139,15 +145,19 @@ main (int argc, char* argv[])
   (void) XSync (d, 0);
 
   t0 = time (NULL);
-
+  
+  struct sigaction action;  
+  action.sa_handler = signalHandler;
+  
+  (void) sigaction(SIGINT, &action, NULL);
+  (void) sigaction(SIGTERM, &action, NULL);
 
  /*
   *  Main event loop.
   */
-  for (;;)
+  while (!(exitNow || restartNow))
   {
-    lookForMessages (d, 1);
-
+    printf("exitNow = %s\n", exitNow ? "true" : "false");
     if (useXidle || useMit)
     {
       queryIdleTime (d, useXidle);
@@ -166,7 +176,15 @@ main (int argc, char* argv[])
       if ((unsigned long) t1 - (unsigned long) t0 > 3) resetLockTrigger ();
       t0 = t1;
     }
+    printf("Entering lookForMessages\n");
+    lookForMessages (d, 1);
+    printf("Exiting lookForMessages\n");
   }
-
-  return 0; /* Never reached! */
+  
+  cleanupSemaphore (d);
+  if (restartNow)
+  {
+    execv (argArray[0], argArray);
+  }
+  return 0;
 }

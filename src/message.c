@@ -99,7 +99,7 @@ exitByMessage (Display* d, Window root, fullResponse* response)
   if (!secure)
   {
     error0 ("Exiting. Bye bye...\n");
-    exit (0);
+    exitNow = True;
     response->type = response_success;
   }
   else
@@ -141,9 +141,7 @@ restartByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure)
   {
-    XDeleteProperty (d, root, semaphore);
-    XFlush (d);
-    execv (argArray[0], argArray);
+    restartNow = True;
     response->type = response_success;
   }
   else
@@ -201,13 +199,16 @@ eventListen(Display* d, double timeout, eventHandler callback)
     until.tv_sec += 1;
   }
   
-  while (1) {
-    if (XPending(d) || select(fd+1, &fds, NULL, NULL, &timeLeft)) {
+  while (!(exitNow || restartNow)) {
+    if (XPending(d) || (select(fd+1, &fds, NULL, NULL, &timeLeft) > 0)) {
       XNextEvent(d, &event);
+      printf("Handling event\n");
       if(!callback(d, &event))
       {
         break;
       }
+    } else {
+      printf("Select timed out\n");
     }
     gettimeofday(&now, NULL);
     timeLeft.tv_usec = until.tv_sec - now.tv_sec;
@@ -216,6 +217,7 @@ eventListen(Display* d, double timeout, eventHandler callback)
     {
       if (timeLeft.tv_sec <= 0)
       {
+        printf("No time left\n");
         break;
       }
       timeLeft.tv_usec += 1000000;
@@ -408,7 +410,6 @@ checkConnectionAndSendMessage (Display* d, Window w)
   if (type == XA_INTEGER)
   {
     int status = XGetClassHint(d, (Window) *contents, &hint);
-//     printf("[%d]\n", strlen(hint.res_class));
     if (status == BadWindow || strcmp(hint.res_class, APPLIC_CLASS) != 0)
     {
       if (messageToSend)
@@ -426,8 +427,8 @@ checkConnectionAndSendMessage (Display* d, Window w)
       request.xclient.message_type = messageRequest;
       request.xclient.format = 32;
       request.xclient.data.l[0] = messageToSend;
-      XSendEvent(d, (Window) *contents, False, 0, &request);
-      eventListen(d, 1, handleResponse);
+      XSendEvent (d, (Window) *contents, False, 0, &request);
+      eventListen (d, 1, handleResponse);
       exit (EXIT_SUCCESS);
     }
     else
@@ -450,3 +451,15 @@ checkConnectionAndSendMessage (Display* d, Window w)
   (void) XFree ((char*) contents);
 }
 
+void cleanupSemaphore (Display* d)
+{
+  Window root;
+  
+  if (semaphore == None)
+  {
+    return;
+  }
+  root = RootWindowOfScreen (ScreenOfDisplay (d, 0));
+  (void) XDeleteProperty (d, root, semaphore);
+  XFlush (d);
+}

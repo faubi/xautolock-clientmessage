@@ -28,6 +28,7 @@
 
 extern void checkConnectionAndSendMessage (Display* d, Window w);
 extern void lookForMessages (Display* d, double timeout);
+extern void cleanupSemaphore (Display* d);
 
 typedef struct {
     response type;
