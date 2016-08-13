@@ -30,9 +30,11 @@ extern void checkConnectionAndSendMessage (Display* d, Window w);
 extern void lookForMessages (Display* d, double timeout);
 extern void cleanupSemaphore (Display* d);
 
-typedef struct {
-    response type;
-    long data[4];
+
+typedef struct
+{
+  response type;
+  long data[4];
 } fullResponse;
 
 #endif /* __message_h */

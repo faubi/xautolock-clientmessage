@@ -23,17 +23,17 @@
 
 #include "config.h"
 
-extern const char* progName;
-extern char**      argArray;
-extern unsigned    nofArgs;
-extern Bool        disabled;
-extern Bool        lockNow;
-extern Bool        unlockNow;
-extern time_t      lockTrigger;
-extern time_t      killTrigger;
-extern pid_t       lockerPid;
+extern const char*           progName;
+extern char**                argArray;
+extern unsigned              nofArgs;
+extern Bool                  disabled;
+extern Bool                  lockNow;
+extern Bool                  unlockNow;
+extern time_t                lockTrigger;
+extern time_t                killTrigger;
+extern pid_t                 lockerPid;
 extern volatile sig_atomic_t exitNow;
-extern Bool        restartNow;
+extern Bool                  restartNow;
 
 #define setLockTrigger(delta) (lockTrigger = time ((time_t*) 0) + (delta))
 #define setKillTrigger(delta) (killTrigger = time ((time_t*) 0) + (delta))

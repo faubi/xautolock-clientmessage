@@ -184,7 +184,6 @@ static Bool
 idAction (Display* d, const char* arg)
 {
   id = arg;
-    printf("id set to \"%s\"", arg);
   return True;
 }
 

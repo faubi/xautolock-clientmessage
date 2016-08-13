@@ -124,7 +124,6 @@ main (int argc, char* argv[])
   initState (argc, argv);
   processOpts (d, argc, argv);
   Window w = wmSetup (d);
-  printf("Got window %d\n", w);
   (void) XSetErrorHandler ((XErrorHandler) catchFalseAlarm);
   checkConnectionAndSendMessage (d, w);
   resetTriggers ();
@@ -153,11 +152,10 @@ main (int argc, char* argv[])
   (void) sigaction(SIGTERM, &action, NULL);
 
  /*
-  *  Main event loop.
+  *  Main event loop. lookForMessages waits 1 second each cycle
   */
   while (!(exitNow || restartNow))
   {
-    printf("exitNow = %s\n", exitNow ? "true" : "false");
     if (useXidle || useMit)
     {
       queryIdleTime (d, useXidle);
@@ -176,9 +174,7 @@ main (int argc, char* argv[])
       if ((unsigned long) t1 - (unsigned long) t0 > 3) resetLockTrigger ();
       t0 = t1;
     }
-    printf("Entering lookForMessages\n");
     lookForMessages (d, 1);
-    printf("Exiting lookForMessages\n");
   }
   
   cleanupSemaphore (d);

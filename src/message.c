@@ -35,7 +35,8 @@ static Atom messageResponse; /* indicates a response from the
 #define MESSAGE_RESPONSE "_MESSAGE_RESPONSE"
 
 /*
-*  Message handlers.
+*  Message handlers. The response paramater is used to modify the response that
+*  is sent back.
 */
 static void
 disableByMessage (Display* d, Window root, fullResponse* response)
@@ -202,13 +203,11 @@ eventListen(Display* d, double timeout, eventHandler callback)
   while (!(exitNow || restartNow)) {
     if (XPending(d) || (select(fd+1, &fds, NULL, NULL, &timeLeft) > 0)) {
       XNextEvent(d, &event);
-      printf("Handling event\n");
       if(!callback(d, &event))
       {
         break;
       }
     } else {
-      printf("Select timed out\n");
     }
     gettimeofday(&now, NULL);
     timeLeft.tv_usec = until.tv_sec - now.tv_sec;
@@ -217,7 +216,6 @@ eventListen(Display* d, double timeout, eventHandler callback)
     {
       if (timeLeft.tv_sec <= 0)
       {
-        printf("No time left\n");
         break;
       }
       timeLeft.tv_usec += 1000000;
@@ -233,18 +231,14 @@ eventListen(Display* d, double timeout, eventHandler callback)
 Bool
 handleRequest(Display* d, XEvent* event)
 {  
-  Window root;          /* as it says        */
+  Window root;          /* as it says              */
   response response;    /* response type to send   */
-  XEvent responseEvent = { 0 }; /* event sent to requester */
-  
-  printf("Received event\n");
-  
+  XEvent responseEvent; /* event sent to requester */
 
   if (event->type == ClientMessage
     && event->xclient.message_type == messageRequest) {
     message request = event->xclient.data.l[0];
     root = RootWindowOfScreen (ScreenOfDisplay (d, 0));
-    printf("Event is request %d\n", request);
     fullResponse* responseBody = (fullResponse*) &responseEvent.xclient.data;
     switch (request)
     {
@@ -287,7 +281,6 @@ handleRequest(Display* d, XEvent* event)
     }
     if (responseBody->type != response_none)
     {
-      printf("Sending response, type = %d, data[0] = %d\n", responseBody->type, responseBody->data[0]);
       responseEvent.type = ClientMessage;
       responseEvent.xclient.display = d;
       responseEvent.xclient.message_type = messageResponse;
@@ -309,7 +302,6 @@ handleResponse(Display* d, XEvent* event)
   if (event->type == ClientMessage
     && event->xclient.message_type == messageResponse) {
     fullResponse* response = (fullResponse*) &event->xclient.data;
-    printf("Received response, type = %d, data[0] = %d\n", response->type, response->data[0]);
     switch(response->type)
     {
       case response_success:
@@ -344,6 +336,10 @@ handleResponse(Display* d, XEvent* event)
   }
 }
 
+/*
+*  Waits for and handles messages from other xautolock instances until the
+*  timeout elapses (in seconds)
+*/
 void
 lookForMessages(Display* d, double timeout){
     eventListen(d, timeout, handleRequest);
@@ -387,15 +383,16 @@ getAtoms (Display* d)
 void
 checkConnectionAndSendMessage (Display* d, Window w)
 {
-  pid_t         pid;      /* as it says               */
-  Window        root;     /* as it says               */
-  Atom          type;     /* actual property type     */
-  int           format;   /* dummy                    */
-  unsigned long nofItems; /* dummy                    */
-  unsigned long after;    /* dummy                    */
-  Window*       contents; /* semaphore property value */
-  XEvent        request;  /* event containing message */
-  XClassHint    hint;     /* used to verify window    */
+  pid_t         pid;      /* as it says                      */
+  Window        root;     /* as it says                      */
+  Atom          type;     /* actual property type            */
+  int           format;   /* dummy                           */
+  unsigned long nofItems; /* dummy                           */
+  unsigned long after;    /* dummy                           */
+  Window*       contents; /* semaphore property value        */
+  XEvent        request;  /* event containing message        */
+  XClassHint    hint;     /* used to verify window           */
+  int           status;   /* status of whether window exists */
 
   getAtoms (d);
 
@@ -405,11 +402,10 @@ checkConnectionAndSendMessage (Display* d, Window w)
                             AnyPropertyType, &type, &format,
           &nofItems, &after,
                             (unsigned char**) &contents);
-  printf("Entered cCAMS. Message = %d\n", messageToSend);
 
   if (type == XA_INTEGER)
   {
-    int status = XGetClassHint(d, (Window) *contents, &hint);
+    status = XGetClassHint(d, (Window) *contents, &hint);
     if (status == BadWindow || strcmp(hint.res_class, APPLIC_CLASS) != 0)
     {
       if (messageToSend)
@@ -421,6 +417,9 @@ checkConnectionAndSendMessage (Display* d, Window w)
     }
     else if (messageToSend)
     {
+     /*
+      *  Send message and wait up to 1 second for a response
+      */
       request.type = ClientMessage;
       request.xclient.display = d;
       request.xclient.window = w;
@@ -437,6 +436,8 @@ checkConnectionAndSendMessage (Display* d, Window w)
                 , progName, (Window) *contents);
         exit (EXIT_FAILURE);
     }
+    XFree(hint.res_name);
+    XFree(hint.res_class);
   }
   else if (messageToSend)
   {
@@ -451,6 +452,10 @@ checkConnectionAndSendMessage (Display* d, Window w)
   (void) XFree ((char*) contents);
 }
 
+/*
+*  Delete the semaphore property so other instances don't think this one is
+*  still running after it has exited
+*/
 void cleanupSemaphore (Display* d)
 {
   Window root;

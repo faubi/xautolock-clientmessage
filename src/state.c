@@ -21,18 +21,18 @@
 #include "state.h"
 #include "miscutil.h"
 
-const char* progName    = 0;     /* our own name                       */
-char**      argArray    = 0;     /* our command line arguments         */
-unsigned    nofArgs     = 0;     /* number of command line arguments   */
+const char* progName          = 0;     /* our own name                       */
+char**      argArray          = 0;     /* our command line arguments         */
+unsigned    nofArgs           = 0;     /* number of command line arguments   */
 
-Bool        disabled    = False; /* whether to ignore all timeouts     */
-Bool        lockNow     = False; /* whether to lock immediately        */
-Bool        unlockNow   = False; /* whether to unlock immediately      */
-time_t      lockTrigger = 0;     /* time at which to invoke the locker */
-time_t      killTrigger = 0;     /* time at which to invoke the killer */
-pid_t       lockerPid   = 0;     /* process id of the current locker   */
-volatile sig_atomic_t exitNow     = 0; /* whether to exit immediately        */
-Bool        restartNow  = False; /* whether to restart immediately     */
+Bool        disabled          = False; /* whether to ignore all timeouts     */
+Bool        lockNow           = False; /* whether to lock immediately        */
+Bool        unlockNow         = False; /* whether to unlock immediately      */
+time_t      lockTrigger       = 0;     /* time at which to invoke the locker */
+time_t      killTrigger       = 0;     /* time at which to invoke the killer */
+pid_t       lockerPid         = 0;     /* process id of the current locker   */
+volatile sig_atomic_t exitNow = 0;     /* whether to exit immediately        */
+Bool        restartNow        = False; /* whether to restart immediately     */
 
 /*
  *  Please have a guess what this is for... :-)
