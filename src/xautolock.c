@@ -154,7 +154,7 @@ main (int argc, char* argv[])
  /*
   *  Main event loop. lookForMessages waits 1 second each cycle
   */
-  while (!(exitNow || restartNow))
+  while (!exitNow)
   {
     if (useXidle || useMit)
     {
@@ -178,7 +178,7 @@ main (int argc, char* argv[])
   }
   
   cleanupSemaphore (d);
-  if (restartNow)
+  if (restart)
   {
     execv (argArray[0], argArray);
   }

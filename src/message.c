@@ -36,9 +36,10 @@ static Atom messageResponse; /* indicates a response from the
 
 /*
 *  Message handlers. The response paramater is used to modify the response that
-*  is sent back.
+*  is sent back. If the return value is True then control returns to the main
+*  loop immediately instead of waiting for more messages.
 */
-static void
+static Bool
 disableByMessage (Display* d, Window root, fullResponse* response)
 {
   /*
@@ -55,9 +56,10 @@ disableByMessage (Display* d, Window root, fullResponse* response)
   {
     response->type = response_failure;
   }
+  return False;
 }
 
-static void
+static Bool
 enableByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure) 
@@ -70,9 +72,10 @@ enableByMessage (Display* d, Window root, fullResponse* response)
   {
     response->type = response_failure;
   }
+  return False;
 }
 
-static void
+static Bool
 toggleByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure)
@@ -92,9 +95,10 @@ toggleByMessage (Display* d, Window root, fullResponse* response)
   {
     response->type = response_failure;
   }
+  return False;
 }
 
-static void
+static Bool
 exitByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure)
@@ -102,60 +106,70 @@ exitByMessage (Display* d, Window root, fullResponse* response)
     error0 ("Exiting. Bye bye...\n");
     exitNow = True;
     response->type = response_success;
+    return True;
   }
   else
   {
     response->type = response_failure;
+    return False;
   }
 }
 
-static void
+static Bool
 lockNowByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure && !disabled)
   {
     lockNow = True;
     response->type = response_success;
+    return True;
   }
   else
   {
     response->type = response_failure;
+    return False;
   }
 }
 
-static void
+static Bool
 unlockNowByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure && !disabled)
   {
     unlockNow = True;
     response->type = response_success;
+    return True;
   }
   else
   {
     response->type = response_failure;
+    return False;
   }
 }
 
-static void
+static Bool
 restartByMessage (Display* d, Window root, fullResponse* response)
 {
   if (!secure)
   {
-    restartNow = True;
+    exitNow = True;
+    restart = True;
     response->type = response_success;
+    return True;
   }
   else
   {
     response->type = response_failure;
+    return False;
   }
 }
 
-static void
+static Bool
 isDisabledMessage (Display* d, Window root, fullResponse* response)
 {
   response->type = response_bool;
   response->data[0] = disabled;
+  return False;
 }
 
 /*
@@ -200,7 +214,7 @@ eventListen(Display* d, double timeout, eventHandler callback)
     until.tv_sec += 1;
   }
   
-  while (!(exitNow || restartNow)) {
+  while (!exitNow) {
     if (XPending(d) || (select(fd+1, &fds, NULL, NULL, &timeLeft) > 0)) {
       XNextEvent(d, &event);
       if(!callback(d, &event))
@@ -234,6 +248,10 @@ handleRequest(Display* d, XEvent* event)
   Window root;          /* as it says              */
   response response;    /* response type to send   */
   XEvent responseEvent; /* event sent to requester */
+  Bool stopWaiting;     /* whether to stop waiting
+                           for events after this   */
+
+  stopWaiting = False;
 
   if (event->type == ClientMessage
     && event->xclient.message_type == messageRequest) {
@@ -243,35 +261,35 @@ handleRequest(Display* d, XEvent* event)
     switch (request)
     {
       case msg_disable:
-       disableByMessage (d, root, responseBody);
+        stopWaiting = disableByMessage (d, root, responseBody);
       break;
 
       case msg_enable:
-       enableByMessage (d, root, responseBody);
+        stopWaiting = enableByMessage (d, root, responseBody);
       break;
 
       case msg_toggle:
-       toggleByMessage (d, root, responseBody);
+        stopWaiting = toggleByMessage (d, root, responseBody);
       break;
 
       case msg_lockNow:
-       lockNowByMessage (d, root, responseBody);
+        stopWaiting = lockNowByMessage (d, root, responseBody);
       break;
 
       case msg_unlockNow:
-       unlockNowByMessage (d, root, responseBody);
+        stopWaiting = unlockNowByMessage (d, root, responseBody);
       break;
 
       case msg_restart:
-       restartByMessage (d, root, responseBody);
+        stopWaiting = restartByMessage (d, root, responseBody);
       break;
 
       case msg_exit:
-       exitByMessage (d, root, responseBody);
+        stopWaiting = exitByMessage (d, root, responseBody);
       break;
       
       case msg_isDisabled:
-        isDisabledMessage (d, root, responseBody);
+        stopWaiting = isDisabledMessage (d, root, responseBody);
       break;
 
       default:
@@ -288,7 +306,7 @@ handleRequest(Display* d, XEvent* event)
       XSendEvent(d, event->xclient.window, False, 0, &responseEvent);
     }
   }
-  return True;
+  return !stopWaiting;
 }
 
 /*
