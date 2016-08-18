@@ -210,7 +210,7 @@ eventListen(Display* d, double timeout, eventHandler callback)
     } else {
     }
     gettimeofday(&now, NULL);
-    timeLeft.tv_usec = until.tv_sec - now.tv_sec;
+    timeLeft.tv_sec = until.tv_sec - now.tv_sec;
     timeLeft.tv_usec = until.tv_usec - now.tv_usec;
     if (timeLeft.tv_usec < 0)
     {
